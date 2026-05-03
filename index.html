@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="which-to-decide">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>which-to-decide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Noto+Serif+KR:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            padding-top: env(safe-area-inset-top, 20px);
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+            padding-left: env(safe-area-inset-left, 20px);
+            padding-right: env(safe-area-inset-right, 20px);
+            color: #1a1a1a;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            padding: 32px 28px;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 2px 24px rgba(0, 0, 0, 0.06);
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.5rem, 5vw, 1.9rem);
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+            color: #1a1a1a;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-family: 'Playfair Display', 'Noto Serif KR', serif;
+            font-style: italic;
+            font-size: clamp(0.82rem, 3vw, 0.95rem);
+            color: #999;
+            margin-bottom: 28px;
+            line-height: 1.6;
+        }
+
+        /* 模式切换 */
+        .mode-switch {
+            display: flex;
+            background: #f0f0f0;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px 10px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            font-weight: 500;
+            color: #888;
+            transition: all 0.2s;
+            -webkit-touch-callout: none;
+            user-select: none;
+        }
+
+        .mode-btn.active {
+            color: #1a1a1a;
+            background: #fff;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+        }
+
+        /* 骰子 */
+        .dice-section, .coin-section {
+            display: none;
+        }
+
+        .dice-section.active, .coin-section.active {
+            display: block;
+        }
+
+        .dice-area {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0 28px;
+        }
+
+        .dice {
+            width: clamp(80px, 22vw, 100px);
+            height: clamp(80px, 22vw, 100px);
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .dice.rolling {
+            animation: rollDice 0.9s ease-in-out;
+        }
+
+        @keyframes rollDice {
+            0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
+            100% { transform: rotateX(2520deg) rotateY(1800deg) rotateZ(1080deg); }
+        }
+
+        .dice-face {
+            position: absolute;
+            width: clamp(80px, 22vw, 100px);
+            height: clamp(80px, 22vw, 100px);
+            background: #fff;
+            border: 1.5px solid #ddd;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dice-face.front  { transform: translateZ(clamp(40px, 11vw, 50px)); }
+        .dice-face.back   { transform: rotateY(180deg) translateZ(clamp(40px, 11vw, 50px)); }
+        .dice-face.right  { transform: rotateY(90deg) translateZ(clamp(40px, 11vw, 50px)); }
+        .dice-face.left   { transform: rotateY(-90deg) translateZ(clamp(40px, 11vw, 50px)); }
+        .dice-face.top    { transform: rotateX(90deg) translateZ(clamp(40px, 11vw, 50px)); }
+        .dice-face.bottom { transform: rotateX(-90deg) translateZ(clamp(40px, 11vw, 50px)); }
+
+        .dot {
+            width: clamp(11px, 3vw, 14px);
+            height: clamp(11px, 3vw, 14px);
+            background: #1a1a1a;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .face-1 .dot:nth-child(1) { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .face-2 .dot:nth-child(1) { top: 24%; left: 24%; }
+        .face-2 .dot:nth-child(2) { bottom: 24%; right: 24%; }
+        .face-3 .dot:nth-child(1) { top: 24%; left: 24%; }
+        .face-3 .dot:nth-child(2) { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .face-3 .dot:nth-child(3) { bottom: 24%; right: 24%; }
+        .face-4 .dot:nth-child(1) { top: 24%; left: 24%; }
+        .face-4 .dot:nth-child(2) { top: 24%; right: 24%; }
+        .face-4 .dot:nth-child(3) { bottom: 24%; left: 24%; }
+        .face-4 .dot:nth-child(4) { bottom: 24%; right: 24%; }
+        .face-5 .dot:nth-child(1) { top: 24%; left: 24%; }
+        .face-5 .dot:nth-child(2) { top: 24%; right: 24%; }
+        .face-5 .dot:nth-child(3) { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .face-5 .dot:nth-child(4) { bottom: 24%; left: 24%; }
+        .face-5 .dot:nth-child(5) { bottom: 24%; right: 24%; }
+        .face-6 .dot:nth-child(1) { top: 24%; left: 24%; }
+        .face-6 .dot:nth-child(2) { top: 24%; right: 24%; }
+        .face-6 .dot:nth-child(3) { top: 50%; left: 24%; transform: translateY(-50%); }
+        .face-6 .dot:nth-child(4) { top: 50%; right: 24%; transform: translateY(-50%); }
+        .face-6 .dot:nth-child(5) { bottom: 24%; left: 24%; }
+        .face-6 .dot:nth-child(6) { bottom: 24%; right: 24%; }
+
+        /* 硬币 */
+        .coin-area {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0 28px;
+            perspective: 800px;
+        }
+
+        .coin {
+            width: clamp(110px, 30vw, 140px);
+            height: clamp(110px, 30vw, 140px);
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .coin.flipping {
+            animation: flipCoin 1.2s ease-in-out;
+        }
+
+        @keyframes flipCoin {
+            0% { transform: rotateY(0); }
+            100% { transform: rotateY(3600deg); }
+        }
+
+        .coin-face {
+            position: absolute;
+            width: clamp(110px, 30vw, 140px);
+            height: clamp(110px, 30vw, 140px);
+            border-radius: 50%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(1rem, 4vw, 1.3rem);
+            font-weight: 700;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        .coin-heads {
+            background: #fff;
+            border: 3px solid #1a1a1a;
+            color: #1a1a1a;
+            transform: rotateY(0deg);
+        }
+
+        .coin-tails {
+            background: #1a1a1a;
+            border: 3px solid #1a1a1a;
+            color: #fff;
+            transform: rotateY(180deg);
+        }
+
+        /* 选项设置 */
+        .setup-section {
+            margin-bottom: 20px;
+        }
+
+        .setup-title {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.7rem, 2.5vw, 0.75rem);
+            color: #888;
+            margin-bottom: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* 骰子选项卡片 - 手机端上下布局 */
+        .option-card {
+            background: #fafafa;
+            border: 1.5px solid #eee;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .option-card:hover {
+            border-color: #ddd;
+        }
+
+        .option-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .option-card-header .option-input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .option-card .remove-btn {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .option-card-points {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .option-card-points .point-btn {
+            width: 36px;
+            height: 36px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .option-input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1.5px solid #e5e5e5;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.85rem, 3vw, 0.95rem);
+            transition: all 0.2s;
+            background: #fff;
+            color: #1a1a1a;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .option-input:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        .option-input::placeholder {
+            color: #ccc;
+        }
+
+        .point-selector {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .point-btn {
+            width: clamp(30px, 8vw, 36px);
+            height: clamp(30px, 8vw, 36px);
+            border: 1.5px solid #e5e5e5;
+            background: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+            font-weight: 600;
+            color: #888;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-touch-callout: none;
+            user-select: none;
+        }
+
+        .point-btn:hover {
+            border-color: #1a1a1a;
+            color: #1a1a1a;
+        }
+
+        .point-btn.selected {
+            background: #1a1a1a;
+            color: #fff;
+            border-color: #1a1a1a;
+        }
+
+        .add-option-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px dashed #ccc;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            color: #888;
+            transition: all 0.2s;
+            margin-top: 4px;
+            -webkit-touch-callout: none;
+            user-select: none;
+        }
+
+        .add-option-btn:hover {
+            border-color: #1a1a1a;
+            color: #1a1a1a;
+        }
+
+        .remove-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            -webkit-touch-callout: none;
+            user-select: none;
+        }
+
+        .remove-btn:hover {
+            color: #e53e3e;
+            background: #fff5f5;
+        }
+
+        /* 硬币问题输入 */
+        .coin-question {
+            margin-bottom: 16px;
+        }
+
+        .coin-question label {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.7rem, 2.5vw, 0.75rem);
+            color: #888;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .coin-question .option-input {
+            width: 100%;
+        }
+
+        /* 按钮 */
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #fff;
+            background: #1a1a1a;
+            letter-spacing: 0.5px;
+            -webkit-touch-callout: none;
+            user-select: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .action-btn:hover {
+            background: #333;
+        }
+
+        .action-btn:active {
+            transform: scale(0.97);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 结果 */
+        .result {
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.1rem, 4vw, 1.4rem);
+            font-weight: 600;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: all 0.4s ease;
+            background: #f5f5f5;
+            color: #888;
+            word-break: break-word;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-highlight {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        /* 历史 */
+        .history {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .history-title {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.65rem, 2.5vw, 0.7rem);
+            color: #aaa;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .history-clear {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.6rem, 2.5vw, 0.65rem);
+            color: #aaa;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: color 0.2s;
+            -webkit-touch-callout: none;
+            user-select: none;
+        }
+
+        .history-clear:hover {
+            color: #e53e3e;
+        }
+
+        .history-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .history-item {
+            background: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.7rem, 2.5vw, 0.78rem);
+            color: #666;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 已分配提示 */
+        .assigned-hint {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.65rem, 2.5vw, 0.7rem);
+            color: #aaa;
+            text-align: center;
+            margin-top: 8px;
+            min-height: 18px;
+        }
+
+        /* 桌面端优化 */
+        @media (min-width: 768px) {
+            .container {
+                padding: 48px 40px;
+                max-width: 560px;
+            }
+
+            .dice-area {
+                margin: 28px 0 36px;
+            }
+
+            .coin-area {
+                margin: 28px 0 36px;
+            }
+
+            .option-card {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 12px 16px;
+            }
+
+            .option-card-header {
+                flex: 1;
+                margin-bottom: 0;
+            }
+
+            .option-card-points {
+                flex-shrink: 0;
+            }
+
+            .option-card-points .point-btn {
+                width: 34px;
+                height: 34px;
+            }
+        }
+
+        /* 手机端安全区适配 */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+            }
+        }
+    </style>
+<base target="_blank">
+
+<!-- 百度统计 -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?272119dae6cce7e3ded69c4a57f828d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N13ZH72VV9"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-N13ZH72VV9');
+</script>
+</head>
+<body>
+    <div class="container">
+        <h1>which-to-decide</h1>
+        <p class="subtitle">AI没有的东西就是犹豫——김애란</p>
+
+        <div class="mode-switch">
+            <button class="mode-btn active" onclick="switchMode('dice')">Dice</button>
+            <button class="mode-btn" onclick="switchMode('coin')">Coin</button>
+        </div>
+
+        <!-- 骰子模式 -->
+        <div class="dice-section active" id="diceSection">
+            <div class="dice-area">
+                <div class="dice" id="dice">
+                    <div class="dice-face front face-1"><div class="dot"></div></div>
+                    <div class="dice-face back face-6">
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    </div>
+                    <div class="dice-face right face-3">
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    </div>
+                    <div class="dice-face left face-4">
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    </div>
+                    <div class="dice-face top face-2"><div class="dot"></div><div class="dot"></div></div>
+                    <div class="dice-face bottom face-5">
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                        <div class="dot"></div><div class="dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <div class="setup-title">SET OPTIONS & ASSIGN POINTS</div>
+                <div id="diceOptions"></div>
+                <button class="add-option-btn" onclick="addDiceOption()">+ Add Option</button>
+                <div class="assigned-hint" id="assignedHint"></div>
+            </div>
+
+            <button class="action-btn" id="rollBtn" onclick="rollDice()">Roll Dice</button>
+        </div>
+
+        <!-- 硬币模式 -->
+        <div class="coin-section" id="coinSection">
+            <div class="coin-area">
+                <div class="coin" id="coin">
+                    <div class="coin-face coin-heads" id="coinHeads">YES</div>
+                    <div class="coin-face coin-tails" id="coinTails">NO</div>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <div class="setup-title">ASK A QUESTION</div>
+                <div class="coin-question">
+                    <input type="text" class="option-input" id="coinQuestion" placeholder="Should I...?">
+                </div>
+            </div>
+
+            <button class="action-btn" id="flipBtn" onclick="flipCoin()">Flip Coin</button>
+        </div>
+
+        <div class="result" id="result">Tap to decide</div>
+
+        <div class="history">
+            <div class="history-header">
+                <span class="history-title">HISTORY</span>
+                <button class="history-clear" onclick="clearHistory()">Clear</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        // 密码学安全随机数
+        function secureRandom() {
+            const arr = new Uint32Array(1);
+            crypto.getRandomValues(arr);
+            return arr[0] / 4294967296;
+        }
+
+        let currentMode = 'dice';
+        let isAnimating = false;
+        let history = [];
+        let diceOptions = [];
+        let assignedPoints = {};
+        let optionIdCounter = 0;
+
+        const diceRotations = {
+            1: { x: 0, y: 0 },
+            2: { x: -90, y: 0 },
+            3: { x: 0, y: -90 },
+            4: { x: 0, y: 90 },
+            5: { x: 90, y: 0 },
+            6: { x: 180, y: 0 }
+        };
+
+        function addDiceOption(text = '', points = []) {
+            const id = optionIdCounter++;
+            diceOptions.push({ id, text, points });
+            points.forEach(p => assignedPoints[p] = id);
+            renderDiceOptions();
+        }
+
+        function removeDiceOption(id) {
+            const idx = diceOptions.findIndex(o => o.id === id);
+            if (idx === -1) return;
+            diceOptions[idx].points.forEach(p => delete assignedPoints[p]);
+            diceOptions.splice(idx, 1);
+            renderDiceOptions();
+        }
+
+        function updateOptionText(id, text) {
+            const opt = diceOptions.find(o => o.id === id);
+            if (opt) opt.text = text;
+        }
+
+        function togglePoint(optionId, point) {
+            const opt = diceOptions.find(o => o.id === optionId);
+            if (!opt) return;
+            const idx = opt.points.indexOf(point);
+            if (idx > -1) {
+                opt.points.splice(idx, 1);
+                delete assignedPoints[point];
+            } else {
+                if (assignedPoints[point] !== undefined) {
+                    const otherOpt = diceOptions.find(o => o.id === assignedPoints[point]);
+                    if (otherOpt) otherOpt.points = otherOpt.points.filter(p => p !== point);
+                }
+                opt.points.push(point);
+                assignedPoints[point] = optionId;
+            }
+            renderDiceOptions();
+        }
+
+        function renderDiceOptions() {
+            const container = document.getElementById('diceOptions');
+            container.innerHTML = '';
+            diceOptions.forEach(opt => {
+                const card = document.createElement('div');
+                card.className = 'option-card';
+
+                const header = document.createElement('div');
+                header.className = 'option-card-header';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'option-input';
+                input.placeholder = 'Option name';
+                input.value = opt.text;
+                input.oninput = () => updateOptionText(opt.id, input.value);
+
+                const remove = document.createElement('button');
+                remove.className = 'remove-btn';
+                remove.textContent = '×';
+                remove.onclick = () => removeDiceOption(opt.id);
+
+                header.appendChild(input);
+                header.appendChild(remove);
+
+                const pointsRow = document.createElement('div');
+                pointsRow.className = 'option-card-points';
+                for (let i = 1; i <= 6; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = 'point-btn';
+                    btn.textContent = i;
+                    if (opt.points.includes(i)) btn.classList.add('selected');
+                    btn.onclick = () => togglePoint(opt.id, i);
+                    pointsRow.appendChild(btn);
+                }
+
+                card.appendChild(header);
+                card.appendChild(pointsRow);
+                container.appendChild(card);
+            });
+            updateHint();
+        }
+
+        function updateHint() {
+            const used = Object.keys(assignedPoints).map(Number).sort((a, b) => a - b);
+            const hint = document.getElementById('assignedHint');
+            if (used.length === 0) {
+                hint.textContent = 'Assign at least one point to each option';
+            } else if (used.length === 6) {
+                hint.textContent = 'All points assigned';
+            } else {
+                const unused = [1, 2, 3, 4, 5, 6].filter(p => !used.includes(p));
+                hint.textContent = `Unassigned: ${unused.join(', ')}`;
+            }
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('diceSection').classList.toggle('active', mode === 'dice');
+            document.getElementById('coinSection').classList.toggle('active', mode === 'coin');
+            hideResult();
+        }
+
+        function rollDice() {
+            if (isAnimating) return;
+            const validOptions = diceOptions.filter(o => o.text.trim() && o.points.length > 0);
+            if (validOptions.length === 0) {
+                showResult('Set options and assign points first', false);
+                return;
+            }
+            isAnimating = true;
+            const btn = document.getElementById('rollBtn');
+            btn.disabled = true;
+            btn.textContent = 'Rolling...';
+            hideResult();
+            const dice = document.getElementById('dice');
+            dice.classList.add('rolling');
+            const result = Math.floor(secureRandom() * 6) + 1;
+            setTimeout(() => {
+                dice.classList.remove('rolling');
+                const rot = diceRotations[result];
+                dice.style.transform = `rotateX(${rot.x + 2520}deg) rotateY(${rot.y + 1800}deg)`;
+            }, 900);
+            setTimeout(() => {
+                let resultText = '';
+                const owner = diceOptions.find(o => o.points.includes(result));
+                if (owner && owner.text.trim()) {
+                    resultText = owner.text.trim();
+                } else {
+                    resultText = `Point ${result}`;
+                }
+                showResult(resultText, true);
+                addToHistory(`Dice: ${resultText}`);
+                btn.disabled = false;
+                btn.textContent = 'Roll Again';
+                isAnimating = false;
+            }, 1100);
+        }
+
+        function flipCoin() {
+            if (isAnimating) return;
+            isAnimating = true;
+            const btn = document.getElementById('flipBtn');
+            btn.disabled = true;
+            btn.textContent = 'Flipping...';
+            hideResult();
+            const coin = document.getElementById('coin');
+            const isHeads = secureRandom() < 0.5;
+            const question = document.getElementById('coinQuestion').value.trim();
+
+            // 先更新硬币文字为最终结果
+            document.getElementById('coinHeads').textContent = isHeads ? 'YES' : 'NO';
+            document.getElementById('coinTails').textContent = isHeads ? 'NO' : 'YES';
+
+            coin.classList.add('flipping');
+
+            setTimeout(() => {
+                coin.classList.remove('flipping');
+                // 最终角度：YES (heads) = 3600deg, NO (tails) = 5400deg
+                const finalRotation = isHeads ? 3600 : 5400;
+                coin.style.transform = `rotateY(${finalRotation}deg)`;
+            }, 1200);
+
+            setTimeout(() => {
+                const result = isHeads ? 'YES' : 'NO';
+                let displayText = result;
+                if (question) {
+                    displayText = `${question} — ${result}`;
+                }
+                showResult(displayText, true);
+                addToHistory(`Coin: ${result}${question ? ' (' + question + ')' : ''}`);
+                btn.disabled = false;
+                btn.textContent = 'Flip Again';
+                isAnimating = false;
+            }, 1400);
+        }
+
+        function showResult(text, isHighlight) {
+            const result = document.getElementById('result');
+            result.textContent = text;
+            result.className = `result ${isHighlight ? 'result-highlight' : ''} show`;
+        }
+
+        function hideResult() {
+            const result = document.getElementById('result');
+            result.classList.remove('show');
+        }
+
+        function addToHistory(text) {
+            const now = new Date();
+            const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            history.unshift({ text, time });
+            if (history.length > 10) history.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<span style="color:#ccc;font-size:0.75rem;font-family:Inter,sans-serif;">No records yet</span>';
+                return;
+            }
+            list.innerHTML = history.map(item =>
+                `<span class="history-item">${item.time} ${item.text}</span>`
+            ).join('');
+        }
+
+        function clearHistory() {
+            history = [];
+            renderHistory();
+        }
+
+        // 初始化
+        addDiceOption('', []);
+        addDiceOption('', []);
+        renderHistory();
+    </script>
+</body>
+</html>
